@@ -6,8 +6,8 @@
   "main": "src/index.js",
   "scripts": {
     "install-all": "npm install && install-routify",
-    "install-routify": "cd src && npm install",
-    "dev": "cd src && npm run dev",
+    "install-routify": "cd src/client && npm install",
+    "dev": "cd src/client && npm run dev",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",

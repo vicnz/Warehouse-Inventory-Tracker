@@ -2,7 +2,7 @@
  * TODO LIST
  * 1. Handle Write-to-Database beforeWindow closes
  */
-const { default: initSqlJS } = require('../public/sqljs/sql-wasm.js')
+const { default: initSqlJS } = require('../native/sqljs/sql-wasm.js')
 const { readFileSync } = require('fs')
 const { app, ipcRenderer } = require('electron')
 

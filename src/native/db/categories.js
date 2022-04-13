@@ -4,6 +4,13 @@ const { parser } = require('./utils')
 
 async function main(database) {
     contextBridge.exposeInMainWorld('category', {
+        //Check If Item Exists
+        itemExists: (id) => {
+            return wrapper(({ id }) => {
+                const sql = database.exec('SELECT id FROM categories WHERE ID = ?', [id])
+                return sql.length > 0;
+            }, { id });
+        },
         //get all list items
         getAll: () => {
             return wrapper(() => {
@@ -19,7 +26,7 @@ async function main(database) {
         //addOne
         addOne: ({ rows }) => {
             return wrapper(({ rows }) => {
-                const sql = database.run(
+                database.run(
                     `INSERT INTO categories
                     (id, label, max, timestamp)
                     VALUES
@@ -40,9 +47,6 @@ async function main(database) {
                 WHERE id = @id;
                 `
                 database.exec(sql, { '@id': rows.id, '@label': rows.label });
-                return {
-                    affectedRows: 1
-                }
             }, { rows })
         },
         //delete many

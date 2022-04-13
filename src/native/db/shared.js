@@ -6,7 +6,7 @@ function shared(database) {
         //get product list
         productList: () => {
             return wrapper(() => {
-                const sql = database.exec('SELECT id, product, description, quantity FROM inventory')
+                const sql = database.exec('SELECT id, product, description, (max - quantity) as remainder FROM master')
                 return {
                     columns: sql[0]?.columns,
                     values: sql[0]?.values
@@ -53,22 +53,6 @@ function shared(database) {
                 }
             }, {})
         },
-        //product list item
-        productListItem: (item) => {
-            return wrapper(({ id }) => {
-                const sql = database.exec('SELECT product, description FROM master WHERE id = ?', ['1'])
-                let data = {};
-                let index = 0;
-                for (item of sql[0]?.values) {
-                    data = {
-                        ...data,
-                        [sql[0]?.columns[idx]]: item
-                    }
-                    index++;
-                }
-                return data;
-            }, { id: item.id })
-        }
     })
 }
 

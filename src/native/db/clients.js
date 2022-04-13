@@ -8,6 +8,19 @@ const { wrapper, parser } = require('./utils')
 
 function clients(database) {
     contextBridge.exposeInMainWorld('clients', {
+        //Check If Item Exists
+        itemExists: (id, type = "supplier") => {
+            return wrapper(({ id, type }) => {
+                switch (type) {
+                    case 'supplier':
+                        database.exec('SELECT id FROM clients WHERE ID = ? AND type = "supplier"', [id])
+                        return sql.length > 0;
+                    case 'customer':
+                        database.exec('SELECT id FROM clients WHERE ID = ? AND type = "customer"', [id])
+                        return sql.length > 0;
+                }
+            }, { id, type });
+        },
         //* SUPPLIERS
         //GET ALL (Suppliers)
         getSuppliers: () => {
@@ -58,7 +71,7 @@ function clients(database) {
                     AND
                     type = 'supplier';
                 `
-                const run = database.run(sql, {
+                database.run(sql, {
                     '@name': rows.name,
                     '@company': rows.company,
                     '@address': rows.address,
@@ -78,7 +91,7 @@ function clients(database) {
                 VALUES
                     (@id, @name, @company, @address, @contact, @email, 'supplier', DATETIME('now'));
                 `
-                const run = database.run(sql, {
+                database.run(sql, {
                     '@id': rows.id,
                     '@name': rows.name,
                     '@company': rows.company,
@@ -92,7 +105,7 @@ function clients(database) {
         //DELETE ONE (Supplier)
         deleteOneSupplier: ({ id }) => {
             return wrapper(({ id }) => {
-                const sql = database.run('DELETE FROM clients WHERE id = ?', [id]);
+                database.run('DELETE FROM clients WHERE id = ?', [id]);
             }, { id })
         },
         deleteManySupplier: ({ ids }) => {
@@ -146,7 +159,6 @@ function clients(database) {
                 const sql = `
                 UPDATE clients
                 SET
-                    id = @id,
                     name = @name,
                     company = @company,
                     address = @address,
@@ -158,8 +170,7 @@ function clients(database) {
                     AND
                     type = 'customer';
                 `
-                const run = database.run(sql, {
-                    '@id': rows.id,
+                database.run(sql, {
                     '@name': rows.name,
                     '@company': rows.company,
                     '@address': rows.address,
@@ -193,7 +204,7 @@ function clients(database) {
         //DELETE ONE (Customer)
         deleteOneCustomer: ({ id }) => {
             return wrapper(({ id }) => {
-                const sql = database.run('DELETE FROM clients WHERE id = ?', [id]);
+                database.run('DELETE FROM clients WHERE id = ?', [id]);
             }, { id })
         },
         //DELETE MANY (Customer)

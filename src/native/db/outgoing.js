@@ -1,10 +1,15 @@
 const { contextBridge } = require('electron')
-const { wrapper } = require('./utils')
-const { parser } = require('./utils')
+const { wrapper, parser } = require('./utils')
 
 async function main(database) {
     contextBridge.exposeInMainWorld('outgoing', {
-
+        //Check If Item Exists
+        itemExists: (id) => {
+            return wrapper(({ id }) => {
+                const sql = database.exec('SELECT id FROM outgoing WHERE ID = ?', [id])
+                return sql.length > 0;
+            }, { id });
+        },
         //*OUTGOING LIST
         getAll: () => {
             return wrapper(() => {
@@ -44,7 +49,6 @@ async function main(database) {
                 const command = `
                 UPDATE outgoing
                 SET
-                    id = @id,
                     product = @product,
                     quantity = @quantity,
                     shipment = @shipment,
@@ -54,8 +58,7 @@ async function main(database) {
                 WHERE id = @key;
                 `
 
-                const sql = database.exec(command, {
-                    '@id': row.id,
+                database.exec(command, {
                     '@product': row.product,
                     '@quantity': row.quantity,
                     '@shipment': row.shipment,
@@ -63,16 +66,12 @@ async function main(database) {
                     '@client': row.client,
                     '@key': row.id
                 });
-
-                return {
-                    affectedRows: sql.getRowsModified()
-                }
             }, { row })
         },
         //delete one
         deleteOne: ({ id }) => {
             return wrapper(({ id }) => {
-                const sql = database.run('DELETE FROM outgoing WHERE id = @id', {
+                database.run('DELETE FROM outgoing WHERE id = @id', {
                     '@id': id
                 })
             }, { id })
@@ -97,7 +96,7 @@ async function main(database) {
                 VALUES
                 (@id, @product, @quantity, @shipment, @arrived, @client, DATETIME('now'))
             `;
-                const sql = database.run(command, {
+                database.run(command, {
                     '@id': row.id,
                     '@product': row.product,
                     '@quantity': row.quantity,

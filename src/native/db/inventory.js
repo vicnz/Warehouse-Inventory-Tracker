@@ -4,6 +4,14 @@ const { wrapper, parser } = require('./utils')
 //Inventory
 async function inventory(database) {
     contextBridge.exposeInMainWorld('inventory', {
+        //Check If Item Exists
+        itemExists: (id) => {
+            return wrapper(({ id }) => {
+                const sql = database.exec('SELECT id FROM master WHERE ID = ?', [id])
+                return sql.length > 0;
+            }, { id });
+        },
+
         //inventory list
         getAll: () => {
             return wrapper((props) => {
@@ -41,7 +49,6 @@ async function inventory(database) {
                 const command = `
                 UPDATE master
                 SET
-                    id = @id,
                     product = @product,
                     description = @description,
                     category = @category,
@@ -54,7 +61,6 @@ async function inventory(database) {
                 `
 
                 const sql = database.run(command, {
-                    '@id': row.id,
                     '@product': row.product,
                     '@description': row.description,
                     '@category': row.category,

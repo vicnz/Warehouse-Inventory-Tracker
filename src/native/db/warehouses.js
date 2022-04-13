@@ -1,9 +1,15 @@
 const { contextBridge } = require('electron')
-const { wrapper } = require('./utils')
-const { parser } = require('./utils')
+const { wrapper, parser } = require('./utils')
 
 async function main(database) {
     contextBridge.exposeInMainWorld('warehouse', {
+        //Check If Item Exists
+        itemExists: (id) => {
+            return wrapper(({ id }) => {
+                const sql = database.exec('SELECT id FROM warehouses WHERE ID = ?', [id])
+                return sql.length > 0;
+            }, { id });
+        },
         //get all list items
         getAll: () => {
             return wrapper(() => {
@@ -19,16 +25,17 @@ async function main(database) {
         //addOne
         addOne: ({ rows }) => {
             return wrapper(({ rows }) => {
-                const sql = database.run(
+                database.exec(
                     `INSERT INTO warehouses
                     (id, label, max, location, timestamp)
                     VALUES
                     (@id, @label, 1, @location, DATETIME("now"))`,
-                    { '@id': rows.id, '@label': rows.label, '@location': rows.location }
+                    {
+                        '@id': rows.id,
+                        '@label': rows.label,
+                        '@location': rows.location
+                    }
                 );
-                return {
-                    affected: 1
-                }
             }, { rows })
         },
         //update one
@@ -41,10 +48,12 @@ async function main(database) {
                     location = @location
                 WHERE id = @id;
                 `
-                database.exec(sql, { '@id': rows.id, '@label': rows.label, '@location': rows.location });
-                return {
-                    affectedRows: 1
-                }
+                database.exec(sql, {
+                    '@id': rows.id,
+                    '@label': rows.label,
+                    '@location': rows.location
+                });
+
             }, { rows })
         },
         //delete many

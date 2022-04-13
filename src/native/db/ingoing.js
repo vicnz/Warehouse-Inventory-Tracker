@@ -1,9 +1,16 @@
 const { contextBridge } = require('electron')
-const { wrapper } = require('./utils')
-const { parser } = require('./utils')
+const { wrapper, parser } = require('./utils')
 
 async function main(database) {
     contextBridge.exposeInMainWorld('ingoing', {
+        //Check If Item Exists
+        itemExists: (id) => {
+            return wrapper(({ id }) => {
+                const sql = database.exec('SELECT id FROM ingoing WHERE ID = ?', [id])
+                return sql.length > 0;
+            }, { id });
+        },
+
         //ingoing list
         getAll: () => {
             return wrapper(() => {
@@ -40,7 +47,6 @@ async function main(database) {
                 const command = `
                 UPDATE ingoing
                 SET
-                    id = @id,
                     product = @product,
                     quantity = @quantity,
                     shipment = @shipment,
@@ -51,8 +57,7 @@ async function main(database) {
                 WHERE id = @key;
                 `
 
-                const sql = database.exec(command, {
-                    '@id': row.id,
+                database.exec(command, {
                     '@product': row.product,
                     '@quantity': row.quantity,
                     '@shipment': row.shipment,
@@ -66,7 +71,7 @@ async function main(database) {
         //delete one
         deleteOne: ({ id }) => {
             return wrapper(({ id }) => {
-                const sql = database.run('DELETE FROM ingoing WHERE id = @id', {
+                database.run('DELETE FROM ingoing WHERE id = @id', {
                     '@id': id
                 })
             }, { id })
@@ -90,7 +95,7 @@ async function main(database) {
                 VALUES
                 (@id, @product, @quantity, @shipment, @arrival, @arrived, @supplier, DATETIME('now'))
             `;
-                const sql = database.run(command, {
+                database.run(command, {
                     '@id': row.id,
                     '@product': row.product,
                     '@quantity': row.quantity,

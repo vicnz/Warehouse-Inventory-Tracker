@@ -1,7 +1,7 @@
 <script>
     /**
      * TODO LIST:
-     * 1. Sanitize Data Before Save
+     * 1. Sanitize Data Before Save ✔️
      */
     import { params, goto, beforeUrlChange } from "@roxi/routify";
     import { onMount } from "svelte";
@@ -19,6 +19,7 @@
     $: warehouses = []; //preloaded warehouse list
     $: item = [];
     let mutable = {};
+    let maxQty = 1;
     //used for animation
     let ques = {
         saving: false,
@@ -51,6 +52,7 @@
                 warehouses = res.warehouses;
                 item = res.item[0];
                 mutable = { ...item };
+                maxQty = mutable.max;
             })
             .catch((error) => console.error(error));
     });
@@ -74,22 +76,46 @@
         }
     });
 
-    //on save
-    async function onSave() {
-        window.inventory
-            .updateOne({
-                row: mutable,
-            })
-            .then((res) => {
-                ques.saving = true;
-                disabled = true;
-                setTimeout(() => {
-                    ques.saving = false;
-                    $goto("/app/inventory");
-                }, 1500);
-            })
-            .catch((err) => console.error(err));
+    //FORM
+    function useForm(node) {
+        node.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const formProps = Object.fromEntries(formData);
+            const immutable = {
+                id: formProps.id.trim(),
+                product: formProps.product.trim(),
+                description: formProps.description.trim(),
+                unit_price: +formProps.unit_price,
+                max: +formProps.max,
+                quantity: +formProps.quantity,
+                category: formProps.category,
+                warehouse: formProps.warehouse,
+            };
+
+            try {
+                // console.log(immutable);
+                window.inventory
+                    .updateOne({
+                        row: immutable,
+                    })
+                    .then((res) => {
+                        ques.saving = true;
+                        disabled = true;
+                        setTimeout(() => {
+                            ques.saving = false;
+                            $goto("/app/inventory");
+                        }, 1500);
+                    });
+            } catch (error) {
+                window.dialogs.error({
+                    title: "Error",
+                    message: error.message,
+                });
+            }
+        });
     }
+
     //reset data
     async function onUndo() {
         const prompt = await window.dialogs.message({
@@ -129,9 +155,13 @@
             return;
         }
     }
+
+    $: {
+        maxQty = mutable.max;
+    }
 </script>
 
-<div class="content" in:fade>
+<form class="content" in:fade action="/" method="POST" use:useForm>
     <Card>
         <Header
             slot="header"
@@ -141,14 +171,16 @@
         >
             <div class="btn-group" slot="controls">
                 <!-- save item -->
-                <button class="btn" {disabled} on:click={onSave}> Save </button>
+                <input type="submit" value="Save" {disabled} class="btn" />
                 <!-- undo changes -->
-                <button class="btn" {disabled} on:click={onUndo}> Undo </button>
+                <button class="btn" {disabled} on:click|preventDefault={onUndo}>
+                    Undo
+                </button>
                 <!-- delete item -->
                 <button
                     class="btn alt-dm btn-danger"
                     {disabled}
-                    on:click={onDelete}
+                    on:click|preventDefault={onDelete}
                 >
                     Delete
                 </button>
@@ -166,15 +198,22 @@
 
         <!-- form body -->
         <fieldset class="p-card">
-            <legend class="text-primary font-italic form-text">
+            <legend class="form-text">
                 Edit:
-                {mutable.id}
+                <span class="text-primary font-italic">
+                    {mutable.id}
+                </span>
             </legend>
             <div class="form-row row-eq-sm-spacing">
                 <div class="col-sm">
+                    <!-- product id info -->
+                    <input type="hidden" name="id" bind:value={mutable.id} />
                     <!-- product name -->
                     <label for="product-name">Product</label>
                     <input
+                        required
+                        name="product"
+                        minlength="3"
                         type="text"
                         class="form-control"
                         bind:value={mutable.product}
@@ -183,6 +222,8 @@
                     <!-- product description -->
                     <label for="product-desc">Description</label>
                     <textarea
+                        name="description"
+                        maxlength="255"
                         id="product-desc"
                         style="height:210px;resize: none"
                         class="form-control"
@@ -195,6 +236,8 @@
                     <!-- product-category -->
                     <label for="product-category">Category</label>
                     <select
+                        required
+                        name="category"
                         id="product-category"
                         class="form-control"
                         bind:value={mutable.category}
@@ -214,10 +257,13 @@
                             <div class="input-group-text">&#8369</div>
                         </div>
                         <input
+                            required
                             type="number"
                             min="0"
+                            pattern="[0-9]+([\.,][0-9])?"
+                            step="0.01"
                             class="form-control"
-                            name="unit-price"
+                            name="unit_price"
                             id="unit-price"
                             bind:value={mutable.unit_price}
                             {disabled}
@@ -229,7 +275,7 @@
                         type="number"
                         min="0"
                         class="form-control"
-                        name="max-qty"
+                        name="max"
                         id="max-qty"
                         bind:value={mutable.max}
                         {disabled}
@@ -237,10 +283,12 @@
                     <!-- product quantity -->
                     <label for="qty">Quantity</label>
                     <input
+                        requried
                         type="number"
                         min="0"
+                        max={maxQty}
                         class="form-control"
-                        name="qty"
+                        name="quantity"
                         id="qty"
                         {disabled}
                         bind:value={mutable.quantity}
@@ -248,7 +296,8 @@
                     <!-- product warehouse location -->
                     <label for="warehouse-dest">Destination</label>
                     <select
-                        name="warehouse-dest"
+                        required
+                        name="warehouse"
                         id="warehouse-dest"
                         class="form-control"
                         bind:value={mutable.warehouse}
@@ -264,4 +313,4 @@
             </div>
         </fieldset>
     </Card>
-</div>
+</form>

@@ -25,7 +25,13 @@
      * DEMO: Immediately Redirect to Main Dashboard
      */
     onMount(() => {
-        $redirect("/app/");
+        const timeout = setTimeout(() => {
+            $redirect("/app/");
+        }, 3000);
+
+        return () => {
+            clearTimeout(timeout);
+        };
     });
 </script>
 

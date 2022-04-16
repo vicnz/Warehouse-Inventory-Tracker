@@ -139,24 +139,7 @@
             }
         });
     }
-    //on item saved
-    function onSave() {
-        //TODO: sanitize data
-        const parsed = {
-            ...data,
-            shipment: toDatabaseDate(data.shipment),
-            arrival: toDatabaseDate(data.arrival),
-        };
-        window.ingoing
-            .addOne({ row: parsed })
-            .then((response) => {
-                saving = true;
-                setTimeout(() => {
-                    $goto("/app/ingoing");
-                }, 1500);
-            })
-            .catch((err) => console.error(err));
-    }
+
     //on form cleared
     async function onClear() {
         const prompt = await window.dialogs.message({

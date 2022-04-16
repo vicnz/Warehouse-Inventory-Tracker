@@ -8,6 +8,7 @@
         label: "",
         location: "",
     };
+    let readonly = data.id === "" && data.label === "" && data.location === "";
     //change spaces to "-"
     $: {
         data = {
@@ -27,6 +28,35 @@
     function onCancel() {
         dispatcher("canceled", {});
     }
+
+    //FORM
+    async function useForm(node, parameters) {
+        node.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const formProps = Object.fromEntries(formData);
+            try {
+                const itemExists = await window.warehouse.itemExists(
+                    formProps.id
+                );
+                if (itemExists) {
+                    throw new Error();
+                }
+
+                dispatcher("saved", {
+                    id: formProps.id.trim(),
+                    label: formProps.label.trim(),
+                    location: formProps.location.trim(),
+                });
+            } catch (err) {
+                window.dialogs.error({
+                    title: "Duplicate Item",
+                    message: `ID Error, [${formProps.id}] already exist.`,
+                });
+            }
+        });
+    }
+
     function onSave() {
         dispatcher("saved", {
             ...data,
@@ -34,21 +64,28 @@
     }
 </script>
 
-<div class="card m-0" in:slide out:slide>
+<form class="card m-0" in:slide out:slide action="/" method="POST" use:useForm>
     <div class="d-flex flex-column flex-md-row justify-content-between">
         <!-- Category ID -->
         <div class="form-group w-full">
-            <label for="">Unique ID</label>
+            <label for="" class={readonly ? "required" : ""}>Unique ID</label>
             <div class="input-group">
                 <input
+                    disabled={!readonly}
+                    required
+                    minlength="3"
                     type="text"
-                    name=""
-                    id=""
+                    name="id"
+                    id="id"
                     class="form-control"
                     bind:value={data.id}
                 />
                 <div class="input-group-append">
-                    <button class="btn shadow-none" on:click={generateID}>
+                    <button
+                        disabled={!readonly}
+                        class="btn shadow-none"
+                        on:click|preventDefault={generateID}
+                    >
                         Generate ID
                     </button>
                 </div>
@@ -57,10 +94,13 @@
         <div class="spacer p-5" />
         <!-- Category Label -->
         <div class="form-group w-full">
-            <label for="">Label</label>
+            <label for="label" class={readonly ? "required" : ""}>Label</label>
             <input
+                required
+                minlength="3"
                 type="text"
-                id=""
+                id="label"
+                name="label"
                 class="form-control"
                 bind:value={data.label}
             />
@@ -68,10 +108,15 @@
         <div class="spacer p-5" />
         <!-- location  -->
         <div class="form-group w-full">
-            <label for="">Location</label>
+            <label for="location" class={readonly ? "required" : ""}
+                >Location</label
+            >
             <input
+                required
+                minlength="5"
                 type="text"
-                id=""
+                id="location"
+                name="location"
                 class="form-control"
                 bind:value={data.location}
             />
@@ -80,8 +125,10 @@
     <br />
     <div class="text-right">
         <div class="btn-group">
-            <button class="btn" on:click={onSave}>Save</button>
-            <button class="btn" on:click={onCancel}> Cancel </button>
+            <input type="submit" class="btn" value="Save" />
+            <button class="btn" on:click|preventDefault={onCancel}>
+                Cancel
+            </button>
         </div>
     </div>
-</div>
+</form>

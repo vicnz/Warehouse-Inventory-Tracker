@@ -15,6 +15,7 @@
     import Card from "../../../lib/ui/card.svelte";
     import Header from "../../../lib/ui/tableheader.svelte";
     import Edit from "./_edit.svelte";
+    import Footer from "../../../lib/ui/tablestatusbar.svelte";
     import { fly } from "svelte/transition";
     $: refresh = false; //refresh window
     $: edit = ""; //edit
@@ -27,7 +28,6 @@
 
     function onDoubleClicked(event) {
         edit = "edit";
-        console.log(event.detail);
         data = {
             id: event.detail.data[0],
             label: event.detail.data[1],
@@ -143,6 +143,13 @@
                         rows={data.values}
                         on:checked={onChecked}
                         on:item={onDoubleClicked}
+                    />
+
+                    <Footer
+                        {checked}
+                        {columns}
+                        {data}
+                        on:refresh={() => refresh != refresh}
                     />
                 {/await}
             {/key}

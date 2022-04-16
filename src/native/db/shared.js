@@ -6,7 +6,7 @@ function shared(database) {
         //get product list
         productList: () => {
             return wrapper(() => {
-                const sql = database.exec('SELECT id, product, description, (max - quantity) as remainder FROM master')
+                const sql = database.exec('SELECT id, product, description, quantity, (max - quantity) as remainder FROM master')
                 return {
                     columns: sql[0]?.columns,
                     values: sql[0]?.values

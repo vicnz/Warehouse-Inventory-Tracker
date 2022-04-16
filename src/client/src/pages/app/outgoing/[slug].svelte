@@ -14,6 +14,8 @@
     import Back from "../../../lib/ui/BackButton.svelte";
     import { toClientDate } from "../../../lib/ui/utils";
     let disabled = true; // enable form
+    let maxQty = 1;
+    let readonly = false;
     //ques
     $: ques = {
         saving: false,
@@ -66,18 +68,55 @@
                 arrived: data[0].arrived === 1 ? true : false,
                 shipment: toClientDate(data[0].shipment),
             };
+            readonly = mutable.arrived;
         });
     });
 
-    function onSave() {
-        console.log(mutable);
-        //TODO: sanitize data
-        ques.saving = true;
-        setTimeout(() => {
-            disabled = true;
-            window.ingoing.updateOne({ row: mutable });
-            $goto("../outgoing");
-        }, 1000);
+    //FORM
+    async function useForm(node, parameters) {
+        node.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const formProps = Object.fromEntries(formData);
+
+            const immutable = {
+                id: formProps.id,
+                product: formProps.product,
+                quantity: +formProps.quantity,
+                shipment: formProps.shipment,
+                arrived: formProps.arrived === "on",
+                client: formProps.client,
+            };
+
+            try {
+                if (immutable.quantity < 1) {
+                    throw new Error(
+                        "Field: [Quantity]\nOrder Quantity Must Not Be None Or Zero"
+                    );
+                } else if (
+                    new Date(immutable.arrival) < new Date(immutable.shipment)
+                ) {
+                    throw new Error(
+                        `Field: [Arrival]\nArrival Date Must Not Be Older Than Shipment Date\nShipment Date ${new Date(
+                            immutable.shipment
+                        ).toLocaleString()}`
+                    );
+                } else {
+                    console.log(immutable);
+                    ques.saving = true;
+                    setTimeout(() => {
+                        disabled = true;
+                        window.outgoing.updateOne({ row: immutable });
+                        $goto("../outgoing");
+                    }, 1000);
+                }
+            } catch (error) {
+                window.dialogs.error({
+                    title: "Error",
+                    message: error.message,
+                });
+            }
+        });
     }
 
     //on undo changes
@@ -118,9 +157,38 @@
             return;
         }
     }
+
+    //Arrived Checked
+    async function onCheckedArrived(event) {
+        const prompt = await window.dialogs.message({
+            type: "warning",
+            title: "Arrived?",
+            message: "✔️ Is Shipped or Not?",
+            detail: "Once an item is marked as shipped and arrived it can no longer be modified",
+            buttons: ["Cancel", "Ok"],
+        });
+
+        if (prompt.response === 1) {
+            return;
+        } else {
+            const temp = event.target.checked;
+            event.target.checked = !temp;
+        }
+    }
+
+    $: {
+        if (!disabled) {
+            //initialize max quantity
+            const filtered = products.filter((item) => {
+                return item[0] === mutable.product;
+            });
+            maxQty =
+                filtered.length !== 0 ? filtered[0][filtered[0].length - 2] : 1;
+        }
+    }
 </script>
 
-<div class="content" in:fade>
+<form class="content" in:fade action="/" method="POST" use:useForm>
     <Card>
         <!-- header -->
         <Header
@@ -130,19 +198,38 @@
             url="../outgoing"
         >
             <div class="btn-group" slot="controls">
-                <button class="btn" {disabled} on:click={onSave}>Save</button>
-                <button class="btn" {disabled} on:click={onUndo}>Undo</button>
-                <button
-                    class="btn btn-danger alt-dm"
-                    {disabled}
-                    on:click={onDelete}
+                <input type="submit" class="btn" {disabled} value="Save" />
+                <button class="btn" {disabled} on:click|preventDefault={onUndo}
+                    >Undo</button
                 >
-                    Delete
-                </button>
+                {#if readonly}
+                    <button
+                        class="btn btn-danger alt-dm"
+                        on:click|preventDefault={onDelete}
+                    >
+                        Delete
+                    </button>
+                {:else}
+                    <button
+                        class="btn btn-danger alt-dm"
+                        {disabled}
+                        on:click|preventDefault={onDelete}
+                    >
+                        Delete
+                    </button>
+                {/if}
             </div>
         </Header>
-        <!-- enable form -->
-        <EnableForm on:on-toggle={() => (disabled = !disabled)} />
+        {#if !readonly}
+            <!-- enable form -->
+            <EnableForm on:on-toggle={() => (disabled = !disabled)} />
+        {:else}
+            <div class="alert alert-primary border-0 rounded-0">
+                <span class="badge badge-primary text-uppercase badge-pill"
+                    >arrived</span
+                >
+            </div>
+        {/if}
         <!-- queses -->
         {#if ques.saving}
             <Ques message={`Saving...`} type="saving" />
@@ -157,9 +244,11 @@
             <div class="custom-checkbox">
                 <input
                     type="checkbox"
+                    name="arrived"
                     id="has-arrived"
                     {disabled}
                     bind:checked={mutable.arrived}
+                    on:change={onCheckedArrived}
                 />
                 <label for="has-arrived">
                     Check this if product is already shipped and arrived to
@@ -170,9 +259,13 @@
             <!-- form body -->
             <div class="form-row row-eq-em-spacing">
                 <div class="col-sm">
+                    <!-- product id info -->
+                    <input type="hidden" name="id" value={mutable.id} />
                     <!-- product information -->
                     <label for="product">Product</label>
                     <select
+                        required
+                        name="product"
                         id="product"
                         class="form-control"
                         {disabled}
@@ -185,14 +278,22 @@
                         {/each}
                     </select>
                     <!-- product quantity -->
-                    <label for="quantity">Quantity</label>
+                    <label for="quantity">
+                        Quantity
+                        <span class="font-italic text-primary">
+                            Max [{maxQty}]
+                        </span>
+                    </label>
                     <input
+                        required
+                        name="quantity"
                         {disabled}
                         bind:value={mutable.quantity}
                         type="number"
                         id="quantity"
                         class="form-control"
-                        min="0"
+                        min="1"
+                        max={maxQty}
                     />
                 </div>
                 <div class="p-5" />
@@ -200,8 +301,10 @@
                     <!-- product supplier -->
                     <label for="supplier">Client</label>
                     <select
+                        required
                         id="supplier"
                         class="form-control text-capitalize"
+                        name="client"
                         {disabled}
                         bind:value={mutable.client}
                     >
@@ -214,7 +317,8 @@
                     <!-- product shipment  -->
                     <label for="shipment">Shipment</label>
                     <input
-                        autocomplete="true"
+                        required
+                        name="shipment"
                         type="date"
                         id="shipment"
                         class="form-control"
@@ -225,4 +329,4 @@
             </div>
         </fieldset>
     </Card>
-</div>
+</form>

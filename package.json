@@ -1,8 +1,8 @@
 {
-  "name": "electron-app",
-  "productName": "electron-app",
+  "name": "Warehouse Inventory Tracker",
+  "productName": "warehouse-inv-tracker",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Warehouse Inventory Tracker, Tracks incoming/outgoing/current stocked items in warehouses",
   "main": "src/index.js",
   "scripts": {
     "install-all": "npm install && install-routify",

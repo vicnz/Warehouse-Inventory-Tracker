@@ -15,6 +15,7 @@
     import DataTable from "../../../lib/ui/datatable/index.svelte";
     import Header from "../../../lib/ui/tableheader.svelte";
     import Card from "../../../lib/ui/card.svelte";
+    import Footer from "../../../lib/ui/tablestatusbar.svelte";
 
     import Edit from "./_edit.svelte";
     import { fly } from "svelte/transition";
@@ -145,6 +146,12 @@
                         rows={data.values}
                         on:checked={onChecked}
                         on:item={onDoubleClicked}
+                    />
+                    <Footer
+                        {checked}
+                        {columns}
+                        {data}
+                        on:refresh={() => (refresh = !refresh)}
                     />
                 {/await}
             {/key}

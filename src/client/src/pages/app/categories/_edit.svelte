@@ -35,11 +35,13 @@
             const formData = new FormData(event.target);
             const formProps = Object.fromEntries(formData);
             try {
-                const itemExists = await window.category.itemExists(
-                    formProps.id
-                );
-                if (itemExists) {
-                    throw new Error();
+                if (add) {
+                    const itemExists = await window.category.itemExists(
+                        formProps.id
+                    );
+                    if (itemExists) {
+                        throw new Error();
+                    }
                 }
 
                 dispatcher("saved", {
@@ -59,6 +61,7 @@
 <form class="card m-0" in:slide out:slide action="/" method="POST" use:useForm>
     <div class="d-flex flex-column flex-md-row justify-content-between">
         <!-- Category ID -->
+        <input type="hidden" name="id" value={data.id} />
         <div class="form-group w-full">
             <label for="id" class={add ? "required" : ""}>Unique ID</label>
             <div class="input-group">

@@ -74,8 +74,8 @@
         //load data
         preloadData()
             .then((response) => {
-                categories = response.categories;
-                warehouses = response.warehouses;
+                categories = response.categories || [];
+                warehouses = response.warehouses || [];
             })
             .catch((error) => console.error(error));
     });
@@ -288,7 +288,7 @@
                     >
                         {#each warehouses as warehouse}
                             <option value={warehouse[0]}>
-                                {warehouse[1] + " " + warehouse[3]}
+                                {warehouse[1] + " " + warehouse[2]}
                             </option>
                         {/each}
                     </select>

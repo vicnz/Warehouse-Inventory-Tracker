@@ -28,9 +28,9 @@ async function main(database) {
             return wrapper(({ rows }) => {
                 database.run(
                     `INSERT INTO categories
-                    (id, label, max, timestamp)
+                    (id, label, timestamp)
                     VALUES
-                    (@id, @label, 1, DATETIME("now"))`,
+                    (@id, @label, DATETIME("now"))`,
                     { '@id': rows.id, '@label': rows.label }
                 );
                 return {

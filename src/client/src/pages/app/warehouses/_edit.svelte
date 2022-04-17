@@ -36,11 +36,14 @@
             const formData = new FormData(event.target);
             const formProps = Object.fromEntries(formData);
             try {
-                const itemExists = await window.warehouse.itemExists(
-                    formProps.id
-                );
-                if (itemExists) {
-                    throw new Error();
+                console.log(formProps);
+                if (readonly) {
+                    const itemExists = await window.warehouse.itemExists(
+                        formProps.id
+                    );
+                    if (itemExists) {
+                        throw new Error();
+                    }
                 }
 
                 dispatcher("saved", {
@@ -56,27 +59,22 @@
             }
         });
     }
-
-    function onSave() {
-        dispatcher("saved", {
-            ...data,
-        });
-    }
 </script>
 
 <form class="card m-0" in:slide out:slide action="/" method="POST" use:useForm>
     <div class="d-flex flex-column flex-md-row justify-content-between">
         <!-- Category ID -->
+        <input type="hidden" name="id" value={data.id} />
         <div class="form-group w-full">
             <label for="" class={readonly ? "required" : ""}>Unique ID</label>
             <div class="input-group">
                 <input
+                    name="id"
                     disabled={!readonly}
                     required
                     minlength="3"
                     type="text"
-                    name="id"
-                    id="id"
+                    id="id-"
                     class="form-control"
                     bind:value={data.id}
                 />

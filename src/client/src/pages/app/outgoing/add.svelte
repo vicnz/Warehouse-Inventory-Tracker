@@ -65,8 +65,8 @@
             const clientList = await window.shared.customerList();
 
             return {
-                products: productList.values,
-                clients: clientList.values,
+                products: productList.values || [],
+                clients: clientList.values || [],
             };
         }
         //load data
@@ -163,7 +163,7 @@
 <form class="content" in:fly={{ x: 100 }} action="/" method="POST" use:useForm>
     <Card>
         <Header
-            title="Export Add New"
+            title="Outgoing : Add"
             slot="header"
             back={Back}
             url="../outgoing"
@@ -227,7 +227,9 @@
                     <!-- product description -->
                     <label for="product-qty" class="required">
                         Quantity
-                        <span class="font-italic">Max [{maxQty}]</span>
+                        <span class="font-italic text-primary">
+                            Max [{maxQty}]
+                        </span>
                     </label>
                     <input
                         required

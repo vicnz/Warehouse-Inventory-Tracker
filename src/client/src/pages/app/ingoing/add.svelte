@@ -66,8 +66,8 @@
             const suppliers = await window.shared.supplierList();
 
             return {
-                products: productList.values,
-                suppliers: suppliers.values,
+                products: productList.values || [],
+                suppliers: suppliers.values || [],
             };
         }
         //load data
@@ -172,7 +172,7 @@
 <form class="content" in:fly={{ x: 100 }} action="/" method="POST" use:useForm>
     <Card>
         <Header
-            title="Import Add New"
+            title="Ingoing : Add"
             slot="header"
             back={Back}
             url="../ingoing"
@@ -234,9 +234,10 @@
                         {/each}
                     </select>
                     <!-- product description -->
-                    <label for="product-qty" class="required"
-                        >Quantity <span class="font-italic">
-                            {`Available: [${maxQty}]`}
+                    <label for="product-qty" class="required">
+                        Quantity
+                        <span class="font-italic text-primary">
+                            Max [{maxQty}]
                         </span>
                     </label>
                     <input

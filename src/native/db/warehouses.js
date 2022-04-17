@@ -27,9 +27,9 @@ async function main(database) {
             return wrapper(({ rows }) => {
                 database.exec(
                     `INSERT INTO warehouses
-                    (id, label, max, location, timestamp)
+                    (id, label, location, timestamp)
                     VALUES
-                    (@id, @label, 1, @location, DATETIME("now"))`,
+                    (@id, @label, @location, DATETIME("now"))`,
                     {
                         '@id': rows.id,
                         '@label': rows.label,

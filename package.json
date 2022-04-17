@@ -14,7 +14,9 @@
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
-  "keywords": [],
+  "keywords": [
+    "Electronjs"
+  ],
   "author": {
     "name": "NZ",
     "email": "v.adam.gonzales@gmail.com"

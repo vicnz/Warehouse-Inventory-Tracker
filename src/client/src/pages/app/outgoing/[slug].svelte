@@ -60,8 +60,8 @@
         }
 
         loadData().then((response) => {
-            customers = response.customers;
-            products = response.products;
+            customers = response.customers || [];
+            products = response.products || [];
             data = response.item;
             mutable = {
                 ...data[0],
@@ -192,7 +192,7 @@
     <Card>
         <!-- header -->
         <Header
-            title="Edit Outgoing Item"
+            title="Outgoing : Edit"
             back={Back}
             slot="header"
             url="../outgoing"

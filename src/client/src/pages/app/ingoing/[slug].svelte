@@ -60,8 +60,8 @@
         }
 
         loadData().then((response) => {
-            suppliers = response.suppliers;
-            products = response.products;
+            suppliers = response.suppliers || [];
+            products = response.products || [];
             data = response.item;
 
             //
@@ -196,7 +196,7 @@
     <Card>
         <!-- header -->
         <Header
-            title="Edit Ingoing Item"
+            title="Ingoing : Edit"
             back={Back}
             slot="header"
             url="../ingoing"
@@ -286,11 +286,12 @@
                         {/each}
                     </select>
                     <!-- product quantity -->
-                    <label for="quantity"
-                        >Quantity <span class="font-italic"
-                            >{`Max [${maxQty}]`}</span
-                        ></label
-                    >
+                    <label for="quantity">
+                        Quantity
+                        <span class="font-italic text-primary">
+                            Max [{maxQty}]
+                        </span>
+                    </label>
                     <input
                         required
                         name="quantity"

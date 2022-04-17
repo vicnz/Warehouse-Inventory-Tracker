@@ -41,8 +41,8 @@
             return {
                 columns: inventoryItem.columns,
                 item: inventoryItem.data,
-                categories: categoryList.values,
-                warehouses: warehouseList.values,
+                categories: categoryList.values || [],
+                warehouses: warehouseList.values || [],
             };
         }
         //load
@@ -305,7 +305,7 @@
                     >
                         {#each warehouses as warehouse}
                             <option value={warehouse[0]}>
-                                {warehouse[1] + " " + warehouse[3]}
+                                {warehouse[1] + " " + warehouse[2]}
                             </option>
                         {/each}
                     </select>

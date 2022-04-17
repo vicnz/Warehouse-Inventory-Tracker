@@ -77,7 +77,7 @@
 
 <div class="content" in:slide>
     <Card>
-        <Header title="Outgoing Items">
+        <Header title="Outgoing">
             <div class="btn-group" slot="controls">
                 <button class="btn" on:click={() => $goto("/app/outgoing/add")}>
                     Add
